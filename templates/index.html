@@ -2,8 +2,8 @@
 <html>
 <head>
   <title>Random Chat</title>
-  <script defer src="chat.js"></script>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="/static/chat.js" defer></script>
 </head>
 <body>
   <div id="register">
@@ -24,7 +24,15 @@
   </div>
 
   <div id="chat" style="display:none">
-    <div id="chatBox"></div>
+    <!-- Loading message -->
+    <div id="loading" style="display:none; color: gray; font-style: italic; margin-bottom: 10px;">
+      Looking for a user to connect with...
+    </div>
+
+    <!-- Chat messages -->
+    <div id="chatBox" style="max-height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;"></div>
+
+    <!-- Message input -->
     <input type="text" id="msgInput" placeholder="Type message...">
     <button onclick="sendMessage()">Send</button>
     <button onclick="disconnectChat()">Disconnect</button>

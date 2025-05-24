@@ -2,6 +2,18 @@ let socket;
 let user_id = crypto.randomUUID();
 let userInfo = {};
 
+// Show loading message
+function showLoadingMessage() {
+  document.getElementById("loading").style.display = "block";
+  document.getElementById("chatBox").style.display = "none";
+}
+
+// Hide loading message
+function hideLoadingMessage() {
+  document.getElementById("loading").style.display = "none";
+  document.getElementById("chatBox").style.display = "block";
+}
+
 function registerUser() {
   const gender = document.getElementById("gender").value;
   const interested_in = document.getElementById("interested_in").value;
@@ -13,16 +25,22 @@ function registerUser() {
   socket.onopen = () => {
     socket.send(JSON.stringify({
       type: "register",
-      gender: gender,
-      interested_in: interested_in
+      gender,
+      interested_in
     }));
+
+    document.getElementById("register").style.display = "none";
+    document.getElementById("chat").style.display = "block";
+    document.getElementById("chatBox").innerHTML = ""; // Clear chat messages
+    showLoadingMessage(); // Show loading message
   };
 
   socket.onmessage = (event) => {
     const data = JSON.parse(event.data);
+    console.log(data);
+
     if (data.type === "matched") {
-      document.getElementById("register").style.display = "none";
-      document.getElementById("chat").style.display = "block";
+      hideLoadingMessage(); // Hide loading message when matched
       appendMessage("System", "Matched with a user!");
     } else if (data.type === "message") {
       appendMessage("Partner", data.text);
@@ -32,10 +50,16 @@ function registerUser() {
       appendMessage("System", "Disconnected from chat.");
     }
   };
+
+  socket.onerror = (e) => {
+    console.error("WebSocket error", e);
+    appendMessage("System", "WebSocket error. Please refresh.");
+  };
 }
 
 function sendMessage() {
   const msg = document.getElementById("msgInput").value;
+  if (msg.trim() === "") return;
   appendMessage("You", msg);
   socket.send(JSON.stringify({
     type: "message",
@@ -54,6 +78,8 @@ function reconnectChat() {
     gender: userInfo.gender,
     interested_in: userInfo.interested_in
   }));
+  document.getElementById("chatBox").innerHTML = ""; // Clear previous chat
+  showLoadingMessage(); // Show loading message again
 }
 
 function appendMessage(sender, message) {
