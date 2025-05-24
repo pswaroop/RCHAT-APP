@@ -14,6 +14,31 @@ function hideLoadingMessage() {
   document.getElementById("chatBox").style.display = "block";
 }
 
+// Setup Enter key event listener after input is visible
+function setupEnterKeyListener() {
+  const input = document.getElementById("msgInput");
+  if (input) {
+    input.addEventListener("keydown", function handler(event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        sendMessage();
+      }
+    }, { once: true }); // Ensures the handler is only added once
+  }
+}
+
+// Show chat UI and bind input listener
+function showChatUI() {
+  document.getElementById("register").style.display = "none";
+  document.getElementById("chat").style.display = "block";
+  document.getElementById("chatBox").innerHTML = "";
+  showLoadingMessage();
+  setTimeout(() => {
+    setupEnterKeyListener();
+    document.getElementById("msgInput").focus(); // Focus input
+  }, 100); // Small delay ensures DOM is painted
+}
+
 function registerUser() {
   const gender = document.getElementById("gender").value;
   const interested_in = document.getElementById("interested_in").value;
@@ -29,10 +54,7 @@ function registerUser() {
       interested_in
     }));
 
-    document.getElementById("register").style.display = "none";
-    document.getElementById("chat").style.display = "block";
-    document.getElementById("chatBox").innerHTML = ""; // Clear chat messages
-    showLoadingMessage(); // Show loading message
+    showChatUI();
   };
 
   socket.onmessage = (event) => {
@@ -40,7 +62,7 @@ function registerUser() {
     console.log(data);
 
     if (data.type === "matched") {
-      hideLoadingMessage(); // Hide loading message when matched
+      hideLoadingMessage();
       appendMessage("System", "Matched with a user!");
     } else if (data.type === "message") {
       appendMessage("Partner", data.text);
@@ -58,14 +80,15 @@ function registerUser() {
 }
 
 function sendMessage() {
-  const msg = document.getElementById("msgInput").value;
+  const msgInput = document.getElementById("msgInput");
+  const msg = msgInput.value;
   if (msg.trim() === "") return;
   appendMessage("You", msg);
   socket.send(JSON.stringify({
     type: "message",
     text: msg
   }));
-  document.getElementById("msgInput").value = "";
+  msgInput.value = "";
 }
 
 function disconnectChat() {
@@ -78,8 +101,8 @@ function reconnectChat() {
     gender: userInfo.gender,
     interested_in: userInfo.interested_in
   }));
-  document.getElementById("chatBox").innerHTML = ""; // Clear previous chat
-  showLoadingMessage(); // Show loading message again
+  document.getElementById("chatBox").innerHTML = "";
+  showLoadingMessage();
 }
 
 function appendMessage(sender, message) {

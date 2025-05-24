@@ -15,6 +15,8 @@ async def websocket_handler(websocket: WebSocket, user_id: str):
                 user.interested_in = data["interested_in"]
                 matched = await try_match_user(user)
                 if not matched:
+                    # Remove any stale duplicates before adding again
+                    waiting_users[:] = [u for u in waiting_users if u.id != user.id]
                     waiting_users.append(user)
 
             elif data["type"] == "message":
@@ -33,8 +35,11 @@ async def websocket_handler(websocket: WebSocket, user_id: str):
 
             elif data["type"] == "reconnect":
                 await cleanup(user)
+                user.gender = data["gender"]
+                user.interested_in = data["interested_in"]
                 matched = await try_match_user(user)
                 if not matched:
+                    waiting_users[:] = [u for u in waiting_users if u.id != user.id]
                     waiting_users.append(user)
 
     except WebSocketDisconnect:
